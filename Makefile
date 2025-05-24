@@ -12,10 +12,6 @@ INTEGRATION_TEST_DIR := $(TEST_DIR)/integration
 
 # Tools
 GOFMT := gofmt
-GO_STATICCHECK := bin/staticcheck
-
-# Ensure bin directory exists
-$(shell mkdir -p bin)
 
 .PHONY: build test test-unit test-integration test-all test-silent test-verbose-logs lint fmt vet staticcheck run clean
 
@@ -72,10 +68,6 @@ test-silent:
 test-verbose-logs:
 	$(GO) test -ldflags="-X 'github.com/kaushiksamanta/vayu.SilentMode=false'" ./...
 
-# Install staticcheck if not present
-$(GO_STATICCHECK):
-	GOBIN=$(shell pwd)/bin $(GO) install honnef.co/go/tools/cmd/staticcheck@latest
-
 # Format code
 fmt:
 	$(GOFMT) -w -s .
@@ -85,8 +77,8 @@ vet:
 	$(GO) vet ./...
 
 # Run staticcheck
-staticcheck: $(GO_STATICCHECK)
-	$(GO_STATICCHECK) ./...
+staticcheck:
+	$(GO) run honnef.co/go/tools/cmd/staticcheck@latest ./...
 
 # Combined lint target
 lint: fmt vet staticcheck

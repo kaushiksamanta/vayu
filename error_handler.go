@@ -50,7 +50,7 @@ func WithErrorHandling(handler HandlerFunc, errorHandler ErrorHandler) HandlerFu
 				if !ok {
 					err = fmt.Errorf("%v", r)
 				}
-				
+
 				LogPanic(err, stackTrace)
 				errorHandler(c, err)
 			}
@@ -74,7 +74,7 @@ func ErrorHandlerMiddleware(errorHandler ErrorHandler) HandlerFunc {
 				if !ok {
 					err = fmt.Errorf("%v", r)
 				}
-				
+
 				LogPanic(err, stackTrace)
 				errorHandler(c, err)
 			}

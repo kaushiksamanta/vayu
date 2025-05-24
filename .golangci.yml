@@ -5,11 +5,11 @@ linters:
     - staticcheck
     - unused
     - gosimple
-    - structcheck
-    - varcheck
     - ineffassign
-    - deadcode
     - typecheck
+    - exportloopref
+    - gocyclo
+    - misspell
   disable:
     - errcheck  # Temporarily disable error checking until all code is updated
 

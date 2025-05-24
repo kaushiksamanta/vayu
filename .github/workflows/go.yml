@@ -20,7 +20,8 @@ jobs:
       with:
         version: latest
         install-mode: binary
-        args: --version
+        # Args are passed to golangci-lint for actual linting, not for installation
+        args: --timeout=5m
     - name: Build
       run: make build
     - name: Test

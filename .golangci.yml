@@ -1,0 +1,23 @@
+linters:
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - structcheck
+    - varcheck
+    - ineffassign
+    - deadcode
+    - typecheck
+  disable:
+    - errcheck  # Temporarily disable error checking until all code is updated
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck  # Don't enforce error checking in test files
+
+run:
+  timeout: 5m

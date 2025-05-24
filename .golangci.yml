@@ -7,7 +7,7 @@ linters:
     - gosimple
     - ineffassign
     - typecheck
-    - exportloopref
+    - copyloopvar  # Replacement for exportloopref
     - gocyclo
     - misspell
   disable:

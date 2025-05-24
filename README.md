@@ -64,6 +64,8 @@ func main() {
 	// Start the app on port 8080
 	app.Listen(":8080")
 }
+```
+
 ```bash
 # Run the server
 go run main.go
@@ -87,12 +89,12 @@ app.Use(func(c *vayu.Context, next vayu.NextFunc) {
 app.GET("/hello", func(c *vayu.Context, next vayu.NextFunc) {
     c.Send(vayu.StatusOK, "Hello, Middleware!")
 })
-```
-The output when accessing the /hello route would be:
 
-Before Handler
-After Handler
+// The output when accessing the /hello route would be:
+// Before Handler
+// After Handler
 ```
+
 ### Query Parameters
 
 Easily access query parameters with `c.Query("param")`:
@@ -106,22 +108,19 @@ app.GET("/search", func(c *vayu.Context, next vayu.NextFunc) {
 	}
 	c.JSON(vayu.StatusOK, map[string]string{"search": term})
 })
-```
-Test with: curl "http://localhost:8080/search?term=go"
-Response: {"search":"go"}
-```
-### Static File Serving
 
+// Test with: curl "http://localhost:8080/search?term=go"
+// Response: {"search":"go"}
+```
+
+### Static File Serving
 Serve static files (e.g., images, CSS, JavaScript) from a directory:
 
 ```go
 app.Static("/assets", "./public")
-```
 
-This serves files from the `public` folder under the `/assets` route:
-
-```
-/public/logo.png  →  http://localhost:8080/assets/logo.png
+// This serves files from the `public` folder under the `/assets` route:
+// /public/logo.png  →  http://localhost:8080/assets/logo.png
 ```
 ### Route Groups
 

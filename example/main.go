@@ -126,33 +126,33 @@ func main() {
 			log.Printf("Error sending JSON response: %v", err)
 		}
 	})
-	
+
 	// Generics demonstration routes
 	gen := app.Group("/generics")
-	
+
 	// Demonstrate JSONT - Type-safe JSON response with generics
 	gen.GET("/json", func(c *vayu.Context, next vayu.NextFunc) {
 		// Define a typed response structure
 		type ApiResponse struct {
-			Message string `json:"message"`
-			Status  int    `json:"status"`
+			Message string   `json:"message"`
+			Status  int      `json:"status"`
 			Items   []string `json:"items"`
 		}
-		
+
 		// Create a response with the correct type
 		response := ApiResponse{
 			Message: "This response is type-safe with generics",
 			Status:  vayu.StatusOK,
 			Items:   []string{"item1", "item2", "item3"},
 		}
-		
+
 		// Use the generic JSONResponse function
 		err := vayu.JSONResponse(c, vayu.StatusOK, response)
 		if err != nil {
 			log.Printf("Error sending JSON response: %v", err)
 		}
 	})
-	
+
 	// Demonstrate SetT and GetT - Type-safe context store with generics
 	gen.GET("/store", func(c *vayu.Context, next vayu.NextFunc) {
 		// Define a custom type
@@ -161,32 +161,32 @@ func main() {
 			Email string
 			Age   int
 		}
-		
+
 		// Store a typed value using generics
 		user := User{Name: "John", Email: "john@example.com", Age: 30}
 		vayu.SetValue(c, "current_user", user)
-		
+
 		// Retrieve with type safety
 		retrievedUser, ok := vayu.GetValue[User](c, "current_user")
-		
+
 		if !ok {
 			c.JSON(vayu.StatusInternalServerError, map[string]string{"error": "Failed to retrieve user"})
 			return
 		}
-		
+
 		// We can access the fields with full type safety
 		err := vayu.JSONResponse(c, vayu.StatusOK, map[string]interface{}{
-			"user": retrievedUser,
-			"name_from_store": retrievedUser.Name,
+			"user":             retrievedUser,
+			"name_from_store":  retrievedUser.Name,
 			"email_from_store": retrievedUser.Email,
-			"age_from_store": retrievedUser.Age,
+			"age_from_store":   retrievedUser.Age,
 		})
-		
+
 		if err != nil {
 			log.Printf("Error sending response: %v", err)
 		}
 	})
-	
+
 	// Demonstrate BindJSONT - Type-safe binding with generics
 	gen.POST("/bind", func(c *vayu.Context, next vayu.NextFunc) {
 		// Define the expected request structure
@@ -195,7 +195,7 @@ func main() {
 			Email    string `json:"email"`
 			Age      int    `json:"age"`
 		}
-		
+
 		// Use generic binding
 		userRequest, err := vayu.BindJSONBody[CreateUserRequest](c)
 		if err != nil {
@@ -204,7 +204,7 @@ func main() {
 			})
 			return
 		}
-		
+
 		// Create a response using the bound data
 		response := map[string]interface{}{
 			"message": "User created successfully",
@@ -214,7 +214,7 @@ func main() {
 				"age":      userRequest.Age,
 			},
 		}
-		
+
 		err = vayu.JSONResponse(c, vayu.StatusCreated, response)
 		if err != nil {
 			log.Printf("Error sending response: %v", err)
@@ -233,7 +233,7 @@ func main() {
 			MinPrice float64 `json:"minPrice"`
 			InStock  bool    `json:"inStock"`
 		}
-		
+
 		// Bind the JSON from the query parameter
 		filter, err := vayu.BindQueryJSON[Filter](c, "filter")
 		if err != nil {
@@ -242,14 +242,14 @@ func main() {
 			})
 			return
 		}
-		
+
 		// Use the typed filter to send a response
 		vayu.JSONResponse(c, vayu.StatusOK, map[string]interface{}{
 			"message": "Filter applied successfully",
-			"filter": filter,
+			"filter":  filter,
 		})
 	})
-	
+
 	// Example: /products/:config
 	// Where config is URL-encoded JSON like %7B%22view%22%3A%22grid%22%2C%22showPrices%22%3Atrue%7D
 	app.GET("/products/:config", func(c *vayu.Context, next vayu.NextFunc) {
@@ -258,7 +258,7 @@ func main() {
 			View       string `json:"view"`
 			ShowPrices bool   `json:"showPrices"`
 		}
-		
+
 		// Bind the JSON from the path parameter
 		config, err := vayu.BindParamJSON[ProductConfig](c, "config")
 		if err != nil {
@@ -267,14 +267,14 @@ func main() {
 			})
 			return
 		}
-		
+
 		// Use the typed configuration to send a response
 		vayu.JSONResponse(c, vayu.StatusOK, map[string]interface{}{
 			"message": "Products configured successfully",
-			"config": config,
+			"config":  config,
 		})
 	})
-	
+
 	// Example: /search?q=golang&page=2&per_page=20&sort=relevance&desc=true
 	app.GET("/search", func(c *vayu.Context, next vayu.NextFunc) {
 		// Define a search parameters type with query tags
@@ -285,7 +285,7 @@ func main() {
 			SortBy  string `query:"sort"`
 			Desc    bool   `query:"desc"`
 		}
-		
+
 		// Bind the query parameters to the struct
 		params, err := vayu.BindQueryParams[SearchParams](c)
 		if err != nil {
@@ -294,12 +294,12 @@ func main() {
 			})
 			return
 		}
-		
+
 		// Use the typed parameters to send a response
 		vayu.JSONResponse(c, vayu.StatusOK, map[string]interface{}{
-			"message": "Search completed successfully",
+			"message":    "Search completed successfully",
 			"parameters": params,
-			"results": []string{"Result 1", "Result 2", "Result 3"},
+			"results":    []string{"Result 1", "Result 2", "Result 3"},
 		})
 	})
 

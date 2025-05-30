@@ -11,7 +11,7 @@ import (
 // TestJSONResponse tests the generic JSONResponse function
 func TestJSONResponse(t *testing.T) {
 	app := vayu.New()
-	
+
 	// Define a test struct with different types of fields
 	type TestResponse struct {
 		StringField string   `json:"string_field"`
@@ -23,7 +23,7 @@ func TestJSONResponse(t *testing.T) {
 			Key string `json:"key"`
 		} `json:"nested_field"`
 	}
-	
+
 	app.GET("/generic-json", func(c *vayu.Context, next vayu.NextFunc) {
 		response := TestResponse{
 			StringField: "test string",
@@ -33,35 +33,35 @@ func TestJSONResponse(t *testing.T) {
 			ArrayField:  []string{"one", "two", "three"},
 		}
 		response.NestedField.Key = "nested value"
-		
+
 		err := vayu.JSONResponse(c, vayu.StatusOK, response)
 		if err != nil {
 			t.Fatalf("Failed to send JSON response: %v", err)
 		}
 	})
-	
+
 	// Test the endpoint
 	req := httptest.NewRequest("GET", "/generic-json", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
-	
+
 	// Verify response status
 	if w.Code != vayu.StatusOK {
 		t.Errorf("Expected status code %d, got %d", vayu.StatusOK, w.Code)
 	}
-	
+
 	// Verify content type
 	contentType := w.Header().Get("Content-Type")
 	if contentType != "application/json" {
 		t.Errorf("Expected Content-Type 'application/json', got '%s'", contentType)
 	}
-	
+
 	// Verify JSON content
 	var result TestResponse
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
 	}
-	
+
 	// Verify individual fields
 	if result.StringField != "test string" {
 		t.Errorf("Expected StringField 'test string', got '%s'", result.StringField)
@@ -86,7 +86,7 @@ func TestJSONResponse(t *testing.T) {
 // TestBindJSONRequest tests the generic BindJSONRequest function
 func TestBindJSONBody(t *testing.T) {
 	app := vayu.New()
-	
+
 	// Define a test struct for binding
 	type TestUser struct {
 		Username string `json:"username"`
@@ -94,21 +94,21 @@ func TestBindJSONBody(t *testing.T) {
 		Age      int    `json:"age"`
 		IsAdmin  bool   `json:"is_admin"`
 	}
-	
+
 	app.POST("/bind-test", func(c *vayu.Context, next vayu.NextFunc) {
 		user, err := vayu.BindJSONBody[TestUser](c)
 		if err != nil {
 			c.JSON(vayu.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
-		
+
 		// Return the bound user to verify
 		err = vayu.JSONResponse(c, vayu.StatusOK, user)
 		if err != nil {
 			t.Fatalf("Failed to send response: %v", err)
 		}
 	})
-	
+
 	// Test valid JSON binding
 	t.Run("Valid JSON", func(t *testing.T) {
 		validJSON := `{
@@ -117,23 +117,23 @@ func TestBindJSONBody(t *testing.T) {
 			"age": 25,
 			"is_admin": true
 		}`
-		
+
 		req := httptest.NewRequest("POST", "/bind-test", strings.NewReader(validJSON))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		app.ServeHTTP(w, req)
-		
+
 		// Check status
 		if w.Code != vayu.StatusOK {
 			t.Errorf("Expected status code %d, got %d", vayu.StatusOK, w.Code)
 		}
-		
+
 		// Verify response content
 		var response TestUser
 		if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 			t.Fatalf("Failed to unmarshal response: %v", err)
 		}
-		
+
 		if response.Username != "testuser" {
 			t.Errorf("Expected Username 'testuser', got '%s'", response.Username)
 		}
@@ -147,16 +147,16 @@ func TestBindJSONBody(t *testing.T) {
 			t.Errorf("Expected IsAdmin true, got %v", response.IsAdmin)
 		}
 	})
-	
+
 	// Test invalid JSON binding
 	t.Run("Invalid JSON", func(t *testing.T) {
 		invalidJSON := `{"username": "testuser", "email": "test@example.com", "age": "not-a-number"}`
-		
+
 		req := httptest.NewRequest("POST", "/bind-test", strings.NewReader(invalidJSON))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		app.ServeHTTP(w, req)
-		
+
 		// Check for bad request status
 		if w.Code != vayu.StatusBadRequest {
 			t.Errorf("Expected status code %d for invalid JSON, got %d", vayu.StatusBadRequest, w.Code)
@@ -167,12 +167,12 @@ func TestBindJSONBody(t *testing.T) {
 // TestContextStoreGenerics tests the generic context store functions
 func TestContextStoreGenerics(t *testing.T) {
 	app := vayu.New()
-	
+
 	type CustomType struct {
 		Name  string
 		Value int
 	}
-	
+
 	app.GET("/context-store", func(c *vayu.Context, next vayu.NextFunc) {
 		// Test with string
 		vayu.SetValue(c, "string_key", "string value")
@@ -180,21 +180,21 @@ func TestContextStoreGenerics(t *testing.T) {
 		if !stringOk || stringVal != "string value" {
 			t.Errorf("Failed to get string value: got %v, ok=%v", stringVal, stringOk)
 		}
-		
+
 		// Test with int
 		vayu.SetValue(c, "int_key", 42)
 		intVal, intOk := vayu.GetValue[int](c, "int_key")
 		if !intOk || intVal != 42 {
 			t.Errorf("Failed to get int value: got %v, ok=%v", intVal, intOk)
 		}
-		
+
 		// Test with bool
 		vayu.SetValue(c, "bool_key", true)
 		boolVal, boolOk := vayu.GetValue[bool](c, "bool_key")
 		if !boolOk || !boolVal {
 			t.Errorf("Failed to get bool value: got %v, ok=%v", boolVal, boolOk)
 		}
-		
+
 		// Test with custom struct
 		custom := CustomType{Name: "test", Value: 100}
 		vayu.SetValue(c, "custom_key", custom)
@@ -202,29 +202,29 @@ func TestContextStoreGenerics(t *testing.T) {
 		if !customOk || customVal.Name != "test" || customVal.Value != 100 {
 			t.Errorf("Failed to get custom value: got %+v, ok=%v", customVal, customOk)
 		}
-		
+
 		// Test with non-existent key
 		_, nonExistOk := vayu.GetValue[string](c, "non_existent")
 		if nonExistOk {
 			t.Errorf("GetValue with non-existent key should return ok=false")
 		}
-		
+
 		// Test with type mismatch
 		vayu.SetValue(c, "type_mismatch", 123)
 		_, typeMismatchOk := vayu.GetValue[string](c, "type_mismatch")
 		if typeMismatchOk {
 			t.Errorf("GetValue with type mismatch should return ok=false")
 		}
-		
+
 		// Verify test completion
 		c.JSON(vayu.StatusOK, map[string]string{"status": "ok"})
 	})
-	
+
 	// Run the test handler
 	req := httptest.NewRequest("GET", "/context-store", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
-	
+
 	// Verify the handler ran successfully
 	if w.Code != vayu.StatusOK {
 		t.Errorf("Expected status code %d, got %d", vayu.StatusOK, w.Code)
@@ -234,14 +234,14 @@ func TestContextStoreGenerics(t *testing.T) {
 // TestMustBindJSONRequest tests the MustBindJSONRequest function
 func TestMustBindJSONBody(t *testing.T) {
 	// This test will verify that MustBindJSONRequest panics on invalid input
-	
+
 	// Define a recover function to catch panics
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("MustBindJSONRequest should have panicked with invalid JSON")
 		}
 	}()
-	
+
 	// Create context with invalid JSON
 	req := httptest.NewRequest("POST", "/test", strings.NewReader(`{"invalid": json`))
 	w := httptest.NewRecorder()
@@ -249,7 +249,7 @@ func TestMustBindJSONBody(t *testing.T) {
 		Writer:  &vayu.ResponseWriter{ResponseWriter: w},
 		Request: req,
 	}
-	
+
 	// This should panic
 	_ = vayu.MustBindJSONBody[struct{}](c)
 }

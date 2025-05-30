@@ -13,7 +13,7 @@ import (
 func TestBindQueryJSON(t *testing.T) {
 	app := vayu.New()
 	results := make(chan bool, 3)
-	
+
 	// Setup a test route for valid JSON
 	app.GET("/test-valid", func(c *vayu.Context, next vayu.NextFunc) {
 		type Filter struct {
@@ -21,13 +21,13 @@ func TestBindQueryJSON(t *testing.T) {
 			Age   int    `json:"age"`
 			Admin bool   `json:"admin"`
 		}
-		
+
 		filter, err := vayu.BindQueryJSON[Filter](c, "filter")
-		
-		if err == nil && 
-		   filter.Name == "John" && 
-		   filter.Age == 30 && 
-		   filter.Admin == true {
+
+		if err == nil &&
+			filter.Name == "John" &&
+			filter.Age == 30 &&
+			filter.Admin == true {
 			c.Writer.WriteHeader(200)
 			results <- true
 		} else {
@@ -35,15 +35,15 @@ func TestBindQueryJSON(t *testing.T) {
 			results <- false
 		}
 	})
-	
+
 	// Setup a route for invalid JSON
 	app.GET("/test-invalid", func(c *vayu.Context, next vayu.NextFunc) {
 		type Filter struct {
 			Name string `json:"name"`
 		}
-		
+
 		_, err := vayu.BindQueryJSON[Filter](c, "filter")
-		
+
 		if err != nil {
 			c.Writer.WriteHeader(400)
 			results <- true // Expected to get an error
@@ -52,15 +52,15 @@ func TestBindQueryJSON(t *testing.T) {
 			results <- false // Shouldn't succeed
 		}
 	})
-	
+
 	// Setup a route for missing parameter
 	app.GET("/test-missing", func(c *vayu.Context, next vayu.NextFunc) {
 		type Filter struct {
 			Name string `json:"name"`
 		}
-		
+
 		_, err := vayu.BindQueryJSON[Filter](c, "filter")
-		
+
 		if err != nil && err.Error() != "" { // Should contain error message
 			c.Writer.WriteHeader(400)
 			results <- true // Expected to get an error
@@ -69,21 +69,21 @@ func TestBindQueryJSON(t *testing.T) {
 			results <- false // Shouldn't succeed
 		}
 	})
-	
+
 	// Test 1: Valid JSON
 	reqValid, _ := http.NewRequest("GET", "/test-valid?filter=%7B%22name%22%3A%22John%22%2C%22age%22%3A30%2C%22admin%22%3Atrue%7D", nil)
 	respValid := httptest.NewRecorder()
 	app.ServeHTTP(respValid, reqValid)
 	assert.Equal(t, 200, respValid.Code)
 	assert.True(t, <-results)
-	
+
 	// Test 2: Invalid JSON
 	reqInvalid, _ := http.NewRequest("GET", "/test-invalid?filter=invalid-json", nil)
 	respInvalid := httptest.NewRecorder()
 	app.ServeHTTP(respInvalid, reqInvalid)
 	assert.Equal(t, 400, respInvalid.Code)
 	assert.True(t, <-results)
-	
+
 	// Test 3: Missing parameter
 	reqMissing, _ := http.NewRequest("GET", "/test-missing", nil)
 	respMissing := httptest.NewRecorder()
@@ -95,21 +95,21 @@ func TestBindQueryJSON(t *testing.T) {
 func TestBindParamJSON(t *testing.T) {
 	app := vayu.New()
 	results := make(chan bool, 2)
-	
+
 	// Setup a test route with path parameter
 	app.GET("/test/:config", func(c *vayu.Context, next vayu.NextFunc) {
 		type Config struct {
 			Theme  string   `json:"theme"`
 			Colors []string `json:"colors"`
 		}
-		
+
 		config, err := vayu.BindParamJSON[Config](c, "config")
-		
-		if err == nil && 
-		   config.Theme == "dark" && 
-		   len(config.Colors) == 2 && 
-		   config.Colors[0] == "black" && 
-		   config.Colors[1] == "blue" {
+
+		if err == nil &&
+			config.Theme == "dark" &&
+			len(config.Colors) == 2 &&
+			config.Colors[0] == "black" &&
+			config.Colors[1] == "blue" {
 			c.Writer.WriteHeader(200)
 			results <- true
 		} else {
@@ -117,15 +117,15 @@ func TestBindParamJSON(t *testing.T) {
 			results <- false
 		}
 	})
-	
+
 	// Setup a route for invalid JSON path parameter
 	app.GET("/invalid/:config", func(c *vayu.Context, next vayu.NextFunc) {
 		type Config struct {
 			Theme string `json:"theme"`
 		}
-		
+
 		_, err := vayu.BindParamJSON[Config](c, "config")
-		
+
 		if err != nil {
 			c.Writer.WriteHeader(400)
 			results <- true // Expected to get an error
@@ -134,7 +134,7 @@ func TestBindParamJSON(t *testing.T) {
 			results <- false // Shouldn't succeed
 		}
 	})
-	
+
 	// Test 1: Valid JSON in path parameter
 	// We're using a pre-encoded JSON here to avoid issues with URL escaping
 	reqValid, _ := http.NewRequest("GET", "/test/%7B%22theme%22%3A%22dark%22%2C%22colors%22%3A%5B%22black%22%2C%22blue%22%5D%7D", nil)
@@ -142,7 +142,7 @@ func TestBindParamJSON(t *testing.T) {
 	app.ServeHTTP(respValid, reqValid)
 	assert.Equal(t, 200, respValid.Code)
 	assert.True(t, <-results)
-	
+
 	// Test 2: Invalid JSON in path parameter
 	reqInvalid, _ := http.NewRequest("GET", "/invalid/not-json", nil)
 	respInvalid := httptest.NewRecorder()

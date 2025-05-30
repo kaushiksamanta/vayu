@@ -37,12 +37,12 @@ func GetValue[T any](c *Context, key string) (T, bool) {
 	if !ok {
 		return zero, false
 	}
-	
+
 	// Try type assertion
 	if typed, ok := val.(T); ok {
 		return typed, true
 	}
-	
+
 	return zero, false
 }
 
@@ -74,7 +74,7 @@ func BindQueryJSON[T any](c *Context, paramName string) (T, error) {
 	if jsonStr == "" {
 		return result, fmt.Errorf("query parameter %s is empty or not found", paramName)
 	}
-	
+
 	// URL-decode the parameter if needed
 	decodedStr, err := url.QueryUnescape(jsonStr)
 	if err != nil {
@@ -107,14 +107,14 @@ func BindParamJSON[T any](c *Context, paramName string) (T, error) {
 	if !exists || jsonStr == "" {
 		return result, fmt.Errorf("path parameter %s is empty or not found", paramName)
 	}
-	
+
 	// URL-decode the parameter if needed
 	decodedStr, err := url.QueryUnescape(jsonStr)
 	if err != nil {
 		// If decoding fails, try with the original string
 		decodedStr = jsonStr
 	}
-	
+
 	// Try to unmarshal the JSON
 	err = json.Unmarshal([]byte(decodedStr), &result)
 	return result, err
@@ -139,10 +139,10 @@ func BindQueryParams[T any](c *Context) (T, error) {
 	var result T
 	val := reflect.ValueOf(&result).Elem()
 	typ := val.Type()
-	
+
 	errs := make([]string, 0)
 	processed := false
-	
+
 	// Process each field with a `query` tag
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
@@ -150,7 +150,7 @@ func BindQueryParams[T any](c *Context) (T, error) {
 		if queryTag == "" {
 			continue
 		}
-		
+
 		processed = true
 		queryValue := c.Query(queryTag)
 		if queryValue == "" {
@@ -160,27 +160,27 @@ func BindQueryParams[T any](c *Context) (T, error) {
 			}
 			continue
 		}
-		
+
 		fieldValue := val.Field(i)
 		if !fieldValue.CanSet() {
 			errs = append(errs, fmt.Sprintf("field %s cannot be set (is it unexported?)", field.Name))
 			continue
 		}
-		
+
 		// Convert the string value to the appropriate field type
 		if err := setFieldFromString(fieldValue, queryValue); err != nil {
 			errs = append(errs, fmt.Sprintf("parameter %s: %v", queryTag, err))
 		}
 	}
-	
+
 	if !processed {
 		return result, fmt.Errorf("no fields with 'query' tag found in type %s", typ.Name())
 	}
-	
+
 	if len(errs) > 0 {
 		return result, fmt.Errorf("binding query parameters: %s", strings.Join(errs, "; "))
 	}
-	
+
 	return result, nil
 }
 
@@ -200,7 +200,7 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 	case reflect.String:
 		fieldValue.SetString(value)
 		return nil
-		
+
 	case reflect.Bool:
 		v, err := strconv.ParseBool(value)
 		if err != nil {
@@ -208,7 +208,7 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 		}
 		fieldValue.SetBool(v)
 		return nil
-		
+
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		if fieldValue.Type().String() == "time.Duration" {
 			v, err := time.ParseDuration(value)
@@ -218,14 +218,14 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 			fieldValue.Set(reflect.ValueOf(v))
 			return nil
 		}
-		
+
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("cannot convert '%s' to int: %w", value, err)
 		}
 		fieldValue.SetInt(v)
 		return nil
-		
+
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		v, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
@@ -233,7 +233,7 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 		}
 		fieldValue.SetUint(v)
 		return nil
-		
+
 	case reflect.Float32, reflect.Float64:
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
@@ -241,17 +241,17 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 		}
 		fieldValue.SetFloat(v)
 		return nil
-		
+
 	case reflect.Slice:
 		// Handle comma-separated values for slices
 		values := strings.Split(value, ",")
 		sliceType := fieldValue.Type().Elem().Kind()
 		slice := reflect.MakeSlice(fieldValue.Type(), len(values), len(values))
-		
+
 		for i, v := range values {
 			elemValue := slice.Index(i)
 			v = strings.TrimSpace(v)
-			
+
 			switch sliceType {
 			case reflect.String:
 				elemValue.SetString(v)
@@ -277,10 +277,10 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 				return fmt.Errorf("unsupported slice element type: %s", sliceType)
 			}
 		}
-		
+
 		fieldValue.Set(slice)
 		return nil
-		
+
 	default:
 		return fmt.Errorf("unsupported field type: %s", fieldValue.Kind())
 	}

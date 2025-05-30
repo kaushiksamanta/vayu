@@ -4,7 +4,7 @@
   <img src="vayu.jpeg" alt="Vayu Framework Mascot" width="300"/>
 </p>
 
-Vayu is a lightweight web framework for Go inspired by Express.js. The name "Vayu" is derived from the Sanskrit word for "air", symbolizing a thin and light framework. It focuses on simplicity, minimalism, and flexibility, allowing you to build web applications quickly while offering a variety of features like middleware support, routing, query parameter handling, file uploads, and more.
+Vayu is a lightweight web framework for Go inspired by Express.js. The name "Vayu" (वायु in Sanskrit, বায়ু in Bangla) is derived from the Sanskrit word for "air" or "wind". In Bangla, "Vayu" (বায়ু) similarly means "air" or "wind". This name symbolizes a thin and light framework. It focuses on simplicity, minimalism, and flexibility, allowing you to build web applications quickly while offering a variety of features like middleware support, routing, query parameter handling, file uploads, and more.
 
 ## ⚡ Features
 
@@ -352,7 +352,9 @@ This example protects the `/secure` route with token-based authentication.
 ```
 vayu/
 ├── context.go           # Request context implementation
-├── context_extension.go # Additional context methods
+├── context_extension.go # Additional context methods with type-safe operations
+├── json.go              # Type-safe JSON handling utilities
+├── binding.go           # Generic JSON binding functions
 ├── error_handler.go     # Error handling middleware with SilentMode
 ├── group.go             # Route group implementation
 ├── logger.go            # Logging middleware
@@ -360,6 +362,7 @@ vayu/
 ├── response.go          # Response helper methods
 ├── response_writer.go   # Custom ResponseWriter implementation
 ├── route.go             # Router implementation
+├── store.go             # Type-safe context storage utilities
 ├── status.go            # HTTP status code constants
 ├── vayu.go              # Core application code
 ├── Makefile             # Build/test automation
@@ -370,16 +373,21 @@ vayu/
 ├── .github/             # GitHub configurations
 │   └── workflows/       # GitHub Actions workflows
 ├── example/             # Example applications
-│   └── main.go          # Simple demo app
+│   ├── main.go          # Simple demo app
+│   └── type_safe.go     # Type-safe API examples
 └── tests/               # Test suite
     ├── unit/            # Unit tests
     │   ├── context_test.go         # Context tests
+    │   ├── json_test.go            # JSON utilities tests
+    │   ├── binding_test.go         # JSON binding tests
+    │   ├── store_test.go           # Context store tests
     │   ├── log_test.go             # SilentMode tests
     │   ├── middleware_test.go      # Middleware tests
     │   ├── response_helpers_test.go # Response helper tests
     │   └── router_test.go          # Router tests
     └── integration/     # Integration tests
-        └── api_test.go  # API endpoint tests
+        ├── api_test.go             # API endpoint tests
+        └── type_safe_test.go       # Type-safe features tests
 ```
 
 ## Development

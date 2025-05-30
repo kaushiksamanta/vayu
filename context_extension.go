@@ -6,21 +6,23 @@ import (
 )
 
 // Set stores a value in the request context with the given key.
-func (c *Context) Set(key string, value interface{}) {
+func (c *Context) Set(key string, value any) {
 	if c.store == nil {
-		c.store = make(map[string]interface{})
+		c.store = make(map[string]any)
 	}
 	c.store[key] = value
 }
 
 // Get retrieves a value from the request context with the given key.
-func (c *Context) Get(key string) (interface{}, bool) {
+func (c *Context) Get(key string) (any, bool) {
 	if c.store == nil {
 		return nil, false
 	}
 	val, ok := c.store[key]
 	return val, ok
 }
+
+// Note: Type-safe generic functions have been moved to generic.go
 
 // HTML sends an HTML response with the given status code and content.
 func (c *Context) HTML(code int, html string) (int, error) {

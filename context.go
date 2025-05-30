@@ -18,8 +18,8 @@ type Context struct {
 	Stopped bool
 	Ctx     context.Context
 
-	// Custom data store for request-scoped data
-	store map[string]interface{}
+	// Custom data store for request-scoped data with type information
+	store map[string]any
 }
 
 // Query returns the value of the URL query parameter with the given key.
@@ -28,7 +28,7 @@ func (c *Context) Query(key string) string {
 }
 
 // JSON sends a JSON response with the given status code and object.
-func (c *Context) JSON(code int, obj interface{}) error {
+func (c *Context) JSON(code int, obj any) error {
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(code)
 	return json.NewEncoder(c.Writer).Encode(obj)
@@ -47,7 +47,7 @@ func (c *Context) Stop() {
 }
 
 // BindJSON binds the request body as JSON to the given struct.
-func (c *Context) BindJSON(dest interface{}) error {
+func (c *Context) BindJSON(dest any) error {
 	if c.Request.Body == nil {
 		return io.EOF
 	}

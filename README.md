@@ -11,6 +11,7 @@ Vayu is a lightweight web framework for Go inspired by Express.js. The name "Vay
 - **Idiomatic Go Structure**: Follows Go best practices for package layout and API design
 - **Fluent API**: Method chaining for route registration and middleware
 - **Context Support**: Integrates with Go's `context.Context` for cancellation and timeouts
+- **Type-Safe Generics**: Generic functions for type-safe JSON and context operations
 - **Complete HTTP Methods**: Support for GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
 - **Built-in Status Codes**: No need to import net/http just for status codes
 - **Response Helpers**: Convenient methods like `OK()`, `Created()`, `BadRequest()` for common responses
@@ -18,9 +19,9 @@ Vayu is a lightweight web framework for Go inspired by Express.js. The name "Vay
 - **Error Handling**: Robust error handling middleware with panic recovery
 - **Route Groups**: For API versioning and modular routing
 - **Static File Serving**: Serve assets from a directory
-- **JSON Handling**: Parse and respond with JSON
+- **JSON Handling**: Parse and respond with JSON with type safety
 - **Form Processing**: Handle form data and file uploads
-- **Request Store**: Context-based key-value store for request data
+- **Request Store**: Context-based key-value store with type-safe access
 - **TLS Support**: HTTPS server capability
 - **Comprehensive Testing**: Structured unit and integration tests
 
@@ -144,6 +145,162 @@ app.Use(vayu.Recovery())
 ```
 
 This middleware catches panics and returns a 500 Internal Server Error response.
+
+### Type-Safe Generics
+
+Vayu provides generic functions for improved type safety using Go's generics feature. These functions help catch type errors at compile time rather than at runtime:
+
+#### Type-Safe JSON Responses
+
+```go
+// Define your response type
+type ApiResponse struct {
+    Status  string `json:"status"`
+    Message string `json:"message"`
+    Data    []Item `json:"data"`
+}
+
+// Create a typed response
+response := ApiResponse{
+    Status:  "success",
+    Message: "Items retrieved successfully",
+    Data:    items,
+}
+
+// Send with type safety
+err := vayu.JSONResponse(c, vayu.StatusOK, response)
+```
+
+#### Type-Safe JSON Binding
+
+```go
+// Define your request type
+type CreateUserRequest struct {
+    Username string `json:"username"`
+    Email    string `json:"email"`
+    Age      int    `json:"age"`
+}
+
+// Bind with type safety
+userRequest, err := vayu.BindJSONBody[CreateUserRequest](c)
+if err != nil {
+    // Handle error
+    return
+}
+
+// Use the strongly typed fields
+fmt.Println(userRequest.Username) // Type-safe field access
+
+// For cases when you know binding will succeed
+user := vayu.MustBindJSONBody[UserProfile](c) // Panics on error
+```
+
+#### Type-Safe Context Store
+
+```go
+// Store values with type safety
+vayu.SetValue(c, "user_id", 42)
+vayu.SetValue(c, "is_admin", true)
+
+// Define a custom type
+type User struct {
+    Name  string
+    Email string
+}
+
+// Store a struct
+user := User{Name: "John", Email: "john@example.com"}
+vayu.SetValue(c, "current_user", user)
+
+// Retrieve values with type safety
+userID, ok := vayu.GetValue[int](c, "user_id")         // 42, true
+isAdmin, ok := vayu.GetValue[bool](c, "is_admin")     // true, true
+currentUser, ok := vayu.GetValue[User](c, "current_user") // User{...}, true
+
+// Type mismatches are caught
+str, ok := vayu.GetValue[string](c, "user_id") // "", false (incorrect type)
+```
+
+#### Type-Safe Query Parameter JSON Binding
+
+Bind JSON data from query parameters with type safety:
+
+```go
+// Define your type
+type Filter struct {
+    Category string  `json:"category"`
+    MinPrice float64 `json:"minPrice"`
+    InStock  bool    `json:"inStock"`
+}
+
+// URL: /products?filter={"category":"books","minPrice":19.99,"inStock":true}
+filter, err := vayu.BindQueryJSON[Filter](c, "filter")
+if err != nil {
+    // Handle error
+    return
+}
+
+// Access type-safe fields
+fmt.Println(filter.Category)  // "books"
+fmt.Println(filter.MinPrice)  // 19.99
+fmt.Println(filter.InStock)   // true
+
+// For cases when binding will always succeed
+filter := vayu.MustBindQueryJSON[Filter](c, "filter") // Panics on error
+```
+
+#### Type-Safe Path Parameter JSON Binding
+
+Bind JSON data from path parameters with type safety:
+
+```go
+// Define your type
+type Config struct {
+    View       string `json:"view"`
+    ShowPrices bool   `json:"showPrices"`
+}
+
+// Route: /products/:config
+// URL: /products/%7B%22view%22%3A%22grid%22%2C%22showPrices%22%3Atrue%7D (URL-encoded JSON)
+config, err := vayu.BindParamJSON[Config](c, "config")
+if err != nil {
+    // Handle error
+    return
+}
+
+// Access type-safe fields
+fmt.Println(config.View)        // "grid"
+fmt.Println(config.ShowPrices)  // true
+```
+
+#### Type-Safe Query Parameters Binding
+
+Bind multiple query parameters to a struct using tags:
+
+```go
+// Define struct with query tags
+type SearchParams struct {
+    Term     string   `query:"q" required:"true"`  // required:"true" marks as mandatory
+    Page     int      `query:"page"`
+    PerPage  int      `query:"per_page"`
+    Tags     []string `query:"tags"`              // Will parse comma-separated values
+    SortBy   string   `query:"sort"`
+    Descending bool    `query:"desc"`
+}
+
+// URL: /search?q=golang&page=2&per_page=20&tags=web,api&sort=relevance&desc=true
+params, err := vayu.BindQueryParams[SearchParams](c)
+if err != nil {
+    // Handle error (including required param missing)
+    return
+}
+
+// Access type-safe fields
+fmt.Println(params.Term)      // "golang"
+fmt.Println(params.Page)      // 2
+fmt.Println(params.Tags)      // ["web", "api"]
+fmt.Println(params.Descending) // true
+```
 
 ### File Uploads
 

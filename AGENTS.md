@@ -42,7 +42,7 @@
 
 ## CI Pipeline
 - CI is defined in `.github/workflows/go.yml`.
-- `golangci-lint` is pinned to `v1.62.2` via `golangci/golangci-lint-action@v6` for deterministic builds.
+- `golangci-lint` is pinned to `v1.64.8` via `golangci/golangci-lint-action@v6` for deterministic builds.
 - CI steps: **Build → Test → Test Race → Lint**.
 
 ## Commit & Pull Request Guidelines

@@ -129,7 +129,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx.Params = params
 
 	// Build middleware + handler chain
-	mws := append(a.middleware, handler)
+	// Copy middleware slice to avoid race: append may reuse shared backing array
+	mws := make([]HandlerFunc, len(a.middleware)+1)
+	copy(mws, a.middleware)
+	mws[len(a.middleware)] = handler
 
 	var exec func(int)
 	exec = func(i int) {
@@ -156,7 +159,7 @@ func (a *App) Static(routePrefix string, dir string) *App {
 	// Strip the prefix before serving
 	handler := http.StripPrefix(routePrefix, fs)
 	a.Use(func(c *Context, next NextFunc) {
-		if strings.HasPrefix(c.Request.URL.Path, routePrefix) {
+		if c.Request.URL.Path == routePrefix || strings.HasPrefix(c.Request.URL.Path, routePrefix+"/") {
 			handler.ServeHTTP(c.Writer, c.Request)
 			return
 		}

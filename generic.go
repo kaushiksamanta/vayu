@@ -140,6 +140,11 @@ func BindQueryParams[T any](c *Context) (T, error) {
 	val := reflect.ValueOf(&result).Elem()
 	typ := val.Type()
 
+	// Enforce T is a struct
+	if typ.Kind() != reflect.Struct {
+		return result, fmt.Errorf("BindQueryParams requires a struct type, got %s", typ.Kind())
+	}
+
 	errs := make([]string, 0)
 	processed := false
 
@@ -219,17 +224,19 @@ func setFieldFromString(fieldValue reflect.Value, value string) error {
 			return nil
 		}
 
-		v, err := strconv.ParseInt(value, 10, 64)
+		bitSize := fieldValue.Type().Bits()
+		v, err := strconv.ParseInt(value, 10, bitSize)
 		if err != nil {
-			return fmt.Errorf("cannot convert '%s' to int: %w", value, err)
+			return fmt.Errorf("cannot convert '%s' to %s: %w", value, fieldValue.Type(), err)
 		}
 		fieldValue.SetInt(v)
 		return nil
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		v, err := strconv.ParseUint(value, 10, 64)
+		bitSize := fieldValue.Type().Bits()
+		v, err := strconv.ParseUint(value, 10, bitSize)
 		if err != nil {
-			return fmt.Errorf("cannot convert '%s' to uint: %w", value, err)
+			return fmt.Errorf("cannot convert '%s' to %s: %w", value, fieldValue.Type(), err)
 		}
 		fieldValue.SetUint(v)
 		return nil

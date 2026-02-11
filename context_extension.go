@@ -38,12 +38,9 @@ func (c *Context) Status(code int) *Context {
 }
 
 // WithTimeout creates a new context with the given timeout.
-func (c *Context) WithTimeout(timeout time.Duration) {
+// Callers should defer the returned cancel function to release resources.
+func (c *Context) WithTimeout(timeout time.Duration) context.CancelFunc {
 	ctx, cancel := context.WithTimeout(c.Ctx, timeout)
-	// Store the cancel function
-	go func() {
-		<-ctx.Done()
-		cancel() // Call cancel when the context is done
-	}()
 	c.Ctx = ctx
+	return cancel
 }

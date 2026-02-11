@@ -91,4 +91,4 @@ run:
 
 clean:
 	rm -f $(BINARY_NAME)
-	rm -rf bin/
+	rm -f coverage.out coverage.html

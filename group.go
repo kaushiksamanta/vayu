@@ -13,7 +13,7 @@ func (a *App) Group(prefix string) *Group {
 
 func (g *Group) Use(mw HandlerFunc) {
 	g.app.Use(func(c *Context, next NextFunc) {
-		if strings.HasPrefix(c.Request.URL.Path, g.prefix) {
+		if c.Request.URL.Path == g.prefix || strings.HasPrefix(c.Request.URL.Path, g.prefix+"/") {
 			mw(c, next)
 		} else {
 			next()

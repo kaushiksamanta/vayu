@@ -1,6 +1,9 @@
 package vayu
 
 import (
+	"bufio"
+	"fmt"
+	"net"
 	"net/http"
 )
 
@@ -24,6 +27,9 @@ func NewResponseWriter(w http.ResponseWriter) *ResponseWriter {
 // WriteHeader sets the status code for the response and marks
 // the response as written.
 func (w *ResponseWriter) WriteHeader(code int) {
+	if w.written {
+		return
+	}
 	w.status = code
 	w.written = true
 	w.ResponseWriter.WriteHeader(code)
@@ -32,7 +38,11 @@ func (w *ResponseWriter) WriteHeader(code int) {
 // Write writes the data to the connection and marks the response
 // as written.
 func (w *ResponseWriter) Write(b []byte) (int, error) {
-	w.written = true
+	if !w.written {
+		// Implicit 200 status when Write is called without WriteHeader
+		w.status = http.StatusOK
+		w.written = true
+	}
 	return w.ResponseWriter.Write(b)
 }
 
@@ -44,4 +54,19 @@ func (w *ResponseWriter) Written() bool {
 // Status returns the status code of the response.
 func (w *ResponseWriter) Status() int {
 	return w.status
+}
+
+// Flush implements the http.Flusher interface.
+func (w *ResponseWriter) Flush() {
+	if flusher, ok := w.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+// Hijack implements the http.Hijacker interface.
+func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, fmt.Errorf("underlying ResponseWriter does not support hijacking")
 }
